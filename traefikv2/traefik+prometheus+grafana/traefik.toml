@@ -1,0 +1,43 @@
+[global]
+checkNewVersion = true
+sendAnonymousUsage = false
+
+[log]
+  level = "DEBUG"
+
+[serversTransport]
+  insecureSkipVerify = true
+
+[metrics]
+  [metrics.prometheus]
+    buckets = [0.1,0.3,1.2,5.0]
+    addEntryPointsLabels = true
+    addServicesLabels = true
+    entryPoint = "metrics"
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":8088"
+
+  [entryPoints.traefik]
+    address = ":8444"
+
+  [entryPoints.metrics]
+    address = ":8082"
+
+  [entryPoints.ping]
+    address = ":8083"
+
+[providers]
+  [providers.docker]
+    watch = true
+    exposedbydefault = false
+
+[ping]
+  entryPoint = "ping"
+
+[accessLog]
+  filePath = "/var/log/traefik_access_original.log"
+  bufferingSize = 100
+
+[api]

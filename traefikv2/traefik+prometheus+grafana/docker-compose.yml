@@ -1,0 +1,82 @@
+# Please replace the Basic Auth hashes with your own Passwords
+
+version: '2.2'
+services:
+  traefik:
+    container_name: traefik.mydomain.com
+    image: traefik:latest
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.toml:/traefik.toml
+      - ./acme.json:/acme.json
+      - ./logs/traefik_access_original.log:/var/log/traefik_access_original.log
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`traefik.mydomain.com`) || Host(`traefik.localhost`) || (Host(`traefik.mydomain.com`) && Path(`/metrics`))"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.services.api.loadbalancer.server.port=8444"
+      - "traefik.http.routers.api.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=traefik:$$2y$$05$$c5.q04jPul/FidK0sbMsFuxqigWXvhCRvNOu4HciwKivRD8zFmKbu"
+
+      - "traefik.http.routers.metrics.rule=Host(`metrics.mydomain.com`)"
+      - "traefik.http.routers.metrics.service=prometheus@internal"
+      - "traefik.http.services.metrics.loadbalancer.server.port=8082"
+      - "traefik.http.routers.metrics.middlewares=metricsauth"
+      - "traefik.http.middlewares.metricsauth.basicauth.users=metrics:$$2y$$05$$z6su9rtzOI1kz1IAYNAOs.mp2YMiYi/clgh0pNXyJq6tw3z8RnmU."
+
+      - "traefik.http.routers.ping.rule=Host(`ping.mydomain.com`)"
+      - "traefik.http.routers.ping.service=ping@internal"
+      - "traefik.http.services.ping.loadbalancer.server.port=8082"
+      - "traefik.http.routers.ping.middlewares=pingauth"
+      - "traefik.http.middlewares.pingauth.basicauth.users=ping:$$2y$$05$$6DsWll8mbA8LgUU/UnQJgOYc9pGa5W2nUyif5/UfyRMTHgjnEn//i"
+    restart: always
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus.mydomain.com
+    network_mode: bridge
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    labels:
+       - "traefik.enable=true"
+       - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`) || Host(`prometheus.mydomain.com`)"
+       - "traefik.http.routers.prometheus.service=prometheus"
+       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+       - "traefik.http.routers.prometheus.middlewares=promauth"
+       - "traefik.http.middlewares.promauth.basicauth.users=prometheus:$$2y$$05$$54ZMk6ryDu7n.339wzwBC.YDb/TifsLKsVlenhja15XiLmGICP7t."
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana.mydomain.com
+    network_mode: bridge
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    env_file:
+      - ./grafana/config.monitoring
+    user: "104"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`) || Host(`grafana.mydomain.com`)"
+      - "traefik.http.routers.grafana.service=grafana"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.middlewares=grafanaauth, grafanaforward, grafanaheader"
+      - "traefik.http.middlewares.grafanaauth.basicauth.users=grafana:$$2y$$05$$iG33d0wMDX2U3nuWTIVv8OgJfEB5xNylfyfz0wt2R.VyBLL4Ms.6q"
+      - "traefik.http.middlewares.grafanaheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.grafanaforward.headers.customresponseheaders.X-Custom-Response-Header=X-WEBAUTH-USER"
+    restart: always
+
+volumes:
+    prometheus_data: {}
+    grafana_data: {}
+

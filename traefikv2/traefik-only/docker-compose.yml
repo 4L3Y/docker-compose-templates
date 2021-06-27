@@ -1,0 +1,23 @@
+# Attention Traefik in Host mode potentially dangerous with Docker Socket
+# Please generate own Hashes for Htaccess in Traefik
+
+version: '2.2'
+services:
+  traefik.mydomain.com:
+    image: traefik:latest
+    container_name: traefik.mydomain.com
+    restart: always
+    network_mode: host
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik.toml:/traefik.toml"
+      - "./acme.json:/acme.json"
+      - "./var/log/traefik_access_original.log:/var/log/traefik_access_original.log"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`traefik.mydomain.com`)"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.services.api.loadbalancer.server.port=8444"
+      - "traefik.http.routers.api.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=testuser:$$2y$$05$$U5S12T13fbMtp2RQw3qyGu5KuBp/eAuiV.oF8HGTc1lu9JYbOw5.O"
+
