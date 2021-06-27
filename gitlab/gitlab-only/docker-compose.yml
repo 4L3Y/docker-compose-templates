@@ -1,0 +1,40 @@
+# This Docker-Compose file for Gitlab activates the Docker Repository functionnality for Gitlab + Dark Theme and SMTP Settings + Traefikv2
+
+version: '2.2'
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    restart: unless-stopped
+    network_mode: bridge
+    hostname: gitlab
+    container_name: gitlab.mydomain.com
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.mydomain.com'
+        nginx['listen_port'] = '80'
+        nginx['listen_https'] = false
+        registry_nginx['listen_port'] = '80'
+        registry_nginx['listen_https'] = false
+        registry_external_url 'https://registry.mydomain.com'
+        gitlab_rails['registry_enabled'] = true
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = "mail.mydomain.com"
+        gitlab_rails['smtp_port'] = 465
+        gitlab_rails['smtp_user_name'] = "gitlab@mydomain.com"
+        gitlab_rails['smtp_password'] = "MYSMTPPASSWORD123$"
+        gitlab_rails['smtp_domain'] = "mydomain.com"
+        gitlab_rails['smtp_authentication'] = "login"
+        gitlab_rails['smtp_enable_starttls_auto'] = true
+        gitlab_rails['smtp_ssl'] = true
+        gitlab_rails['smtp_force_ssl'] = true
+        gitlab_rails['gitlab_email_from'] = 'gitlab@mydomain.com'
+        gitlab_rails['gitlab_email_reply_to'] = 'gitlab@mydomain.com'
+        gitlab_rails['gitlab_default_theme'] = 2
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.gitlab.rule=Host(`gitlab.mydomain.com`) || Host(`registry.mydomain.com`)
+      - traefik.http.services.gitlab.loadbalancer.server.port=80
+    volumes:
+      - './gitlab/config:/etc/gitlab'
+      - './gitlab/logs:/var/log/gitlab'
+      - './gitlab/data:/var/opt/gitlab'

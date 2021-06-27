@@ -1,0 +1,13 @@
+# In the Folder Config00 you can define your Runner Settings / Potentially Dangerous Docker Socket RW for Container but needed for DinD Build
+
+version: '2.2'
+services:
+  runner00:
+    image: gitlab/gitlab-runner:latest
+    privileged: true
+    container_name: runner00.mydomain.com
+    restart: unless-stopped
+    network_mode: bridge
+    volumes:
+      - "./config00:/etc/gitlab-runner"
+      - "/var/run/docker.sock:/var/run/docker.sock"
