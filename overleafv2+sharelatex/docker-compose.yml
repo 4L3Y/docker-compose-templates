@@ -1,0 +1,79 @@
+# You have to Download the Texlive Full Environment and Link it to the Container
+
+version: '2.2'
+services:
+  sharelatex:
+    container_name: leaf.latex
+    restart: unless-stopped
+    image: sharelatex/sharelatex:latest
+    networks:
+      - overleafv2
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    links:
+      - mongo
+      - redis
+    volumes:
+      - ./sharelatex_data:/var/lib/sharelatex
+      - /usr/local/texlive:/usr/local/texlive
+    environment:
+      ENABLED_LINKED_FILE_TYPES: 'url,project_file'
+      ENABLE_CONVERSIONS: 'true'
+      SHARELATEX_MONGO_URL: mongodb://mongo/sharelatex
+      SHARELATEX_REDIS_HOST: redis
+      REDIS_HOST: redis
+      ENABLE_CONVERSIONS: 'true'
+      SHARELATEX_APP_NAME: "Hey Thats my Overleaf Community Edition"
+      SHARELATEX_SITE_URL: https://latex.mydomain.com
+      SHARELATEX_NAV_TITLE: Latex MyDomain
+      SHARELATEX_HEADER_IMAGE_URL: https://mydomain.com/logo-latex.png
+      SHARELATEX_ADMIN_EMAIL: "noreply@mydomain.com"
+      SHARELATEX_LEFT_FOOTER: '[{"text": "Powered by Overleaf 202X"},{"text": ""} ]'
+      SHARELATEX_RIGHT_FOOTER: '[{"text": "@mydomain.com"} ]'
+      SHARELATEX_EMAIL_FROM_ADDRESS: "noreply@mydomain.com"
+      SHARELATEX_EMAIL_SMTP_HOST: mydomain.com
+      SHARELATEX_EMAIL_SMTP_PORT: 465
+      SHARELATEX_EMAIL_SMTP_SECURE: "true"
+      SHARELATEX_EMAIL_SMTP_USER: "noreply@mydomain.com"
+      SHARELATEX_EMAIL_SMTP_PASS: "MYPASSSSSSSWORD123$$"
+      SHARELATEX_BEHIND_PROXY: "true"
+      SHARELATEX_EMAIL_SMTP_TLS_REJECT_UNAUTH: "true"
+      SHARELATEX_EMAIL_SMTP_IGNORE_TLS: "false"
+      SHARELATEX_CUSTOM_EMAIL_FOOTER: "<div>This system is a self hosted Sharelatex Instance latex.mydomain.com</div>"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.latex.rule=Host(`latex.mydomain.com`)
+      - traefik.http.services.latex.loadbalancer.server.port=80
+  mongo:
+    restart: unless-stopped
+    image: mongo
+    networks:
+      - overleafv2
+    container_name: mongo.latex
+    expose:
+      - 27017
+    volumes:
+      - ./mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    restart: unless-stopped
+    image: redis:5.0
+    networks:
+      - overleafv2
+    container_name: redis.latex
+    expose:
+      - 6379
+    volumes:
+      - ./redis_data:/data
+
+networks:
+  overleafv2:
+    name: overleafv2
