@@ -1,0 +1,13 @@
+version: "2"
+services:
+  portainer:
+    container_name: portainer.mydomain.com
+    hostname: portainer
+    image: portainer/portainer-ce:latest
+    expose:
+      - 9000
+    network_mode: bridge
+    restart: unless-stopped
+    volumes:
+      - ./portainer_data/_data/:/data
+      - /var/run/docker.sock:/var/run/docker.sock
