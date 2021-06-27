@@ -1,0 +1,20 @@
+# Create own User for Jenkins and Replace the UID here / Potentially Dangerous Docker Socket for Jenkins
+
+version: "2"
+services:
+  jenkins:
+    container_name: jenkins.mydomain.com
+    image: jenkins/jenkins:latest
+    user: 5009:5009
+    restart: unless-stopped
+    network_mode: bridge
+    volumes:
+      - ./jenkins_data:/var/jenkins_home
+      - ./home:/home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - 'JAVA_OPTS=-Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=true'
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.jenkins.rule=Host(`jenkins.mydomain.com`)
+      - traefik.http.services.jenkins.loadbalancer.server.port=8080
