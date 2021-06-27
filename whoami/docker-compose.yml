@@ -1,0 +1,12 @@
+version: '3.3'
+services:
+  whoami:
+    image: "containous/whoami"
+    container_name: "who.mydomain.com"
+    network_mode: bridge
+    labels:
+      traefik.enable: true
+      traefik.http.routers.whoamiservice.middlewares: auth
+      traefik.http.routers.whoamiservice.tls: true
+      traefik.http.routers.whoamiservice.rule: Host(`who.mydomain.com`)
+      traefik.http.middlewares.whoamiservice.basicauth.removeheader: true
