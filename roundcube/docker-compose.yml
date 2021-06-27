@@ -1,0 +1,29 @@
+# Please add own Database Connection Settings and replace Password 
+
+version: "3"
+services:
+ roundcube:
+   container_name: mail.mydomain.com
+   environment:
+     - ROUNDCUBEMAIL_DEFAULT_HOST=tls://mail.mydomain.com
+     - ROUNDCUBEMAIL_DEFAULT_PORT=143
+     - ROUNDCUBEMAIL_SMTP_SERVER=ssl://mail.mydomain.com
+     - ROUNDCUBEMAIL_SMTP_PORT=465
+     - ROUNDCUBEMAIL_PLUGINS=archive,zipdownload
+     - ROUNDCUBEMAIL_UPLOAD_MAX_FILESIZE=15M
+     - ROUNDCUBEMAIL_SKIN=elastic
+     - ROUNDCUBEMAIL_DB_TYPE=mysql
+     - ROUNDCUBEMAIL_DB_HOST=mydomain.com
+     - ROUNDCUBEMAIL_DB_USER=roundcube
+     - ROUNDCUBEMAIL_DB_PASSWORD=MYDBPASSWORD123$$
+     - ROUNDCUBEMAIL_DB_NAME=roundcube
+       #   - ROUNDCUBEMAIL_password_dovecotpw_with_method=true
+       #   - ROUNDCUBEMAIL_password_algorithm=clear
+       #   - ROUNDCUBEMAIL_password_algorithm_prefix=CRYPT
+   network_mode: bridge
+   restart: unless-stopped
+   image: roundcube/roundcubemail:latest
+   labels:
+     - traefik.enable=true
+     - traefik.http.routers.roundcube.rule=Host(`mail.mydomain.com`)
+     - traefik.http.services.roundcube.loadbalancer.server.port=80
