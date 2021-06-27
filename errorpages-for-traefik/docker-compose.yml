@@ -1,0 +1,15 @@
+version: '3.3'
+services:
+  errorhandler:
+    image: guillaumebriday/traefik-custom-error-pages
+    container_name: errorhandler
+    network_mode: bridge
+    restart: always
+    labels:
+      traefik.enable: true
+      # traefik.http.routers.errorhandler.service: errorhandler
+      traefik.http.routers.errorhandler.rule: Host(`errorhandler.mydomain.com`) || HostRegexp(`{catchall:.*}`)
+      traefik.http.routers.errorhandler.priority: 1
+      traefik.http.middlewares.errorhandler.errors.service: errorhandler
+      traefir.http.middlewares.errorhandler.errors.status: "401,403,404,429,[500-599]"
+      traefik.http.middlewares.errorhandler.errors.query: "/{status}.html"

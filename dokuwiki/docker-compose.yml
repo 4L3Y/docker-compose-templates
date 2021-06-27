@@ -1,0 +1,16 @@
+# /docker/dokuwiki is my Docker-Compose Path
+
+version: '2'
+services:
+ dokuwiki:
+  container_name: dokuwiki.mydomain.com
+  image: 'bitnami/dokuwiki:latest'
+  volumes:
+    - '/docker/dokuwiki/data_dokuwiki:/bitnami'
+  restart: unless-stopped
+  network_mode: bridge
+  labels:
+    - traefik.enable=true
+    - traefik.http.routers.dokuwiki.rule=Host(`dokuwiki.mydomain.com`)
+    - traefik.http.services.dokuwiki.loadbalancer.server.port=80
+    - traefik.http.routers.dokuwiki.middlewares=auth
