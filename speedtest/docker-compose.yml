@@ -1,0 +1,11 @@
+version: "3"
+services:
+  speedtest:
+    container_name: speedtest.mydomain.com
+    image: adolfintel/speedtest:latest
+    network_mode: bridge
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.speed.rule=Host(`speed.mydomain.com`)
+      - traefik.http.services.speed.loadbalancer.server.port=80
