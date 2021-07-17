@@ -1,0 +1,35 @@
+version: '2.2'
+services:
+  jira:
+    image: atlassian/jira-software
+    container_name: jira.mydomain.com
+    network_mode: bridge
+    restart: unless-stopped
+    volumes:
+      - ./jira:/var/atlassian/jira
+      - ./jira_applications_data:/var/atlassian/application-data/jira
+    environment:
+      ATL_PROXY_NAME: 'jira.mydomain.com'
+      ATL_PROXY_PORT: '443'
+      ATL_TOMCAT_PORT: '8080'
+      JVM_MINIMUM_MEMORY: '1024m'
+      JVM_MAXIMUM_MEMORY: '8192m'
+      ATL_TOMCAT_SCHEME: 'https'
+      ATL_TOMCAT_SECURE: 'true'
+      JVM_SUPPORT_RECOMMENDED_ARGS: '-Dfile.encoding=utf-8'
+      # ATL_JDBC_URL: 'jdbc:mysql://jira@mydomain.com:3306/
+      ATL_JDBC_URL: 'jdbc:mysql://jira@mydomain.com:3306/jirauseUnicode=true&amp;characterEncoding=UTF8&amp;sessionVariables=default_storage_engine=InnoDB&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC&amp;'
+      ATL_JDBC_USER: 'jiradbuser'
+      ATL_JDBC_PASSWORD: 'MYPASSWORD123$$'
+      # You have to Download the Driver and Copy to the Jira Directory
+      ATL_DB_DRIVER: 'com.mysql.cj.jdbc.Driver'
+      ATL_DB_TYPE: 'mysql'
+      ATL_DB_SCHEMA_NAME: 'public'
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+    labels:
+        - traefik.enable=true
+        - traefik.http.routers.jira.rule=Host(`jira.mydomain.com`)
+        - traefik.http.services.jira.loadbalancer.server.port=8080
