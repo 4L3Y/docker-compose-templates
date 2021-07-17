@@ -1,0 +1,32 @@
+version: '2.2'
+services:
+  confluence:
+    image: atlassian/confluence-server
+    container_name: confluence.mydomain.com
+    network_mode: bridge
+    restart: unless-stopped
+    volumes:
+      - ./confluence_data:/var/atlassian/application-data/confluence
+    environment:
+      JIRA_DATABASE_URL: 'mysql://confluence@mydomain.com/confluence'
+      JIRA_DB_PASSWORD: "MYPASSWORD123$$"
+      JIRA_PROXY_NAME: 'confluence.mydomain.com'
+      JIRA_PROXY_PORT: '443'
+      JIRA_PROXY_SCHEME: 'https'
+      ATL_PROXY_NAME: 'confluence.mydomain.com'
+      ATL_PROXY_PORT: '443'
+      ATL_TOMCAT_PORT: '8080'
+      ATL_TOMCAT_SCHEME: 'https'
+      ATL_TOMCAT_SECURE: 'true'
+      ATL_DB_DRIVER: 'com.mysql.cj.jdbc.Driver'
+      ATL_DB_TYPE: 'mysql'
+      JVM_MINIMUM_MEMORY: '1024m'
+      JVM_MAXIMUM_MEMORY: '8192m'
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+    labels:
+        - traefik.enable=true
+        - traefik.http.routers.confluence.rule=Host(`confluence.mydomain.com`)
+        - traefik.http.services.confluence.loadbalancer.server.port=8080
